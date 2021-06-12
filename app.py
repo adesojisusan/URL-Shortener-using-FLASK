@@ -1,7 +1,7 @@
 from logging import debug
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-
+import string, random
 
 app = Flask(__name__)
 
@@ -18,20 +18,30 @@ class Url_Model(db.Model):
     def __init__(self, short, long ):
         self.short = short
         self.long = long
-@app.route()
+@app.route('/short')
 def shortern_url():
-    return "abcd"
-
+    letters = string.ascii_lowercase + string.ascii_uppercase
+    while True:
+        rand_letters = random.choices(letters, k=3 )
+        rand_letters = "".join(rand_letters)
+        short_url = Url_Model.query.filter_by(short= rand_letters).first()
+        if not short_url:
+            return rand_letters
 
 @app.route('/', methods= ['POST', 'GET'])
 def home():
     if request.method =='POST':
-        url_recieved = request.form['nm']
-        
-        url_avaliable = Url_Model.query.fliter_by(long=url_recieved).first()
+        url_recieved = request.form['nm'] 
+        url_avaliable = Url_Model.query.filter_by(long=url_recieved).first()
         if url_avaliable:
             return redirect(url_for('display_short_url', url= url_avaliable.short))
-        return url_recieved
+        else:
+            #creating new url if short url not found
+            short_url = shortern_url()
+            new_url= Url_Model(url_recieved,short_url)
+            db.session.add(new_url)
+            db.session.commit()
+            return short_url
     else:
         return render_template('home.html')
 @app.route('/copy')
