@@ -34,7 +34,7 @@ def home():
         url_recieved = request.form['nm'] 
         url_avaliable = Url_Model.query.filter_by(long=url_recieved).first()
         if url_avaliable:
-            return redirect(url_for('display_short_url', url= url_avaliable.short))
+            return redirect(url_for('display_short_url', url=url_avaliable.short))
         else:
             #creating new url if short url not found
             short_url = shortern_url()
@@ -44,10 +44,17 @@ def home():
             return short_url
     else:
         return render_template('home.html')
-@app.route('/copy')
-def copy_page():
 
-    return('copy your URL')
+@app.route('/display/<url>')
+def display_short_url(url):
+ return render_template('shortern.html', short_url_displayed = url)
 
+@app.route('/<short_url>')
+def redirection(short_url):
+    long_url = Url_Model.query.filter_by(short= short_url).first()
+    if long_url:
+        return redirect(long_url.long)
+    else:
+        return f'<h1>wrong url</h1>'
 if __name__ =='__main__' :
     app.run(debug = True)
